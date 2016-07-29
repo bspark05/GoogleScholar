@@ -11,21 +11,29 @@ import FileIO.Excel as excel
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
+import GS_Neo4j as neo4j
 
 
 def gscholarParsing(reference):
 #    output of gscholar.py
-#    dt - List
+#    input dt - List
     gscResult = gscholar.query(reference)
+    
 #    parsing a series of strings in the list using zs.bibtex library
 #    dt - zs.bibtex.structures.Bibliography (double dictionary)
-    bibliography = parse_string(gscResult[0])
-#    parsing one dictionary of bibliography
-    for key, value in bibliography.items():
-        article = value
- 
-    return article
-#    return dt: zs.bibtex.structures.Article
+    try:
+        bibliography = parse_string(gscResult[0])
+        #    parsing one dictionary of bibliography
+        for key, value in bibliography.items():
+            article = value
+     
+        return article
+    #    return dt: zs.bibtex.structures.Article
+    except(IndexError):
+#         print gscResult
+        return {} # empty dictionary
+    
+
 
 def articleToDictionary(article):
     dic = {}
@@ -44,18 +52,38 @@ def articleToDictionary(article):
 #    return dt: dictionary of string
 
 if __name__ == '__main__':
+    ### initiate GS_Neo4j class and activate the database
+    neo4jCla = neo4j.GS_Neo4j('neo4j', 'bspark05')
     
     ### Reading references from csv file
-    refers = excel.excelRead("Book1.xlsx", "Book1")
+    refers = excel.excelRead("Book4.xlsx", "Sheet1")
     
     referList = []
     for refer in refers:
         referStr = str(refer[0])
         referList.append(referStr)
-    
-    
+        
+        
     ### Parsing the references
-    article2 = gscholarParsing("Modeling spatial dimensions of housing prices in Milwaukee, WI")
-    dic2 = articleToDictionary(article2)
+#     for refer in referList:
+#         print refer
+#         article = gscholarParsing(refer)
+#         dic = articleToDictionary(article)
+
+    
+    articleFrom = gscholarParsing("Basu, S., and T. G. Thibodeau. 1998. Analysis of spatial autocorrelation in house prices. Journal of Real Estate Finance and Economics 17 (1): 61–85.")
+    dicFrom = articleToDictionary(articleFrom)
+    print dicFrom
+    
+    articleTo = gscholarParsing(referList[1])
+    print articleTo
+    dicTo = articleToDictionary(articleTo)
+    print dicTo
+    
     
     ### Saving the results in a graph DB
+    
+#     neo4jCla.addRef()
+    
+    
+    
